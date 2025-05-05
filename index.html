@@ -143,16 +143,16 @@
 </head>
 <body>
   <div class="container">
-    <h1>🎉 Mystery Question Game</h1>
+    <h1>🎮 ღადაობა თამაში</h1>
 
     <div class="question-box" id="questionDisplay">
-      Question hidden until revealed
+      შეკითხვა დამალულია
     </div>
 
     <div class="button-group">
-      <button id="flipCoinBtn">Flip Coin</button>
-      <button id="nextRoundBtn" class="hidden">Next Round</button>
-      <button id="revealQuestionBtn" class="hidden">Reveal Question</button>
+      <button id="flipCoinBtn">ააგდე მონეტა</button>
+      <button id="nextRoundBtn" class="hidden">შემდეგი მონეტა</button>
+      <button id="revealQuestionBtn" class="hidden">შეკითხვის გამოჩენა</button>
     </div>
 
     <div id="coinResult" class="hidden">
@@ -163,7 +163,7 @@
     </div>
 
     <div id="questionReveal" class="hidden">
-      <p>❓ The question was: <span id="revealedQuestion"></span></p>
+      <p><span id="revealedQuestion"></span></p>
     </div>
   </div>
 
@@ -219,14 +219,13 @@
 
     // Initialize game
     function initGame() {
-      // Pick a random question but don't display it
+      // Pick a random question and display it immediately
       currentQuestion = getRandomQuestion();
-      questionDisplay.textContent = "Question hidden until revealed";
+      questionDisplay.textContent = currentQuestion;
 
       // Reset UI
       flipCoinBtn.classList.remove('hidden');
       nextRoundBtn.classList.add('hidden');
-      revealQuestionBtn.classList.add('hidden');
       coinResult.classList.add('hidden');
       questionReveal.classList.add('hidden');
     }
@@ -254,10 +253,10 @@
 
         if (coinFlipResult === 'tails') {
           questionReveal.classList.remove('hidden');
-          revealedQuestion.textContent = currentQuestion;
-          questionDisplay.textContent = currentQuestion;
+          revealedQuestion.textContent = "You must share your answer!";
         } else {
-          revealQuestionBtn.classList.remove('hidden');
+          questionReveal.classList.remove('hidden');
+          revealedQuestion.textContent = "Your answer stays secret!";
         }
 
         // Hide animation after showing result
@@ -271,9 +270,7 @@
     // Reveal question function (only used when coin is heads)
     function revealQuestion() {
       questionReveal.classList.remove('hidden');
-      revealedQuestion.textContent = currentQuestion;
       revealQuestionBtn.classList.add('hidden');
-      questionDisplay.textContent = currentQuestion;
     }
 
     // Set up event listeners
