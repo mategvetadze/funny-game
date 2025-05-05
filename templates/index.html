@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mystery Question Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      margin: 15px;
+    }
+
+    h1 {
+      color: #333;
+      margin-top: 0;
+      font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+
+    .question-box {
+      background-color: #f0f8ff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      font-size: clamp(18px, 4vw, 20px);
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 12px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: clamp(14px, 3vw, 16px);
+      font-weight: 600;
+      transition: background-color 0.2s;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    #nextRoundBtn {
+      background-color: #2196F3;
+    }
+
+    #nextRoundBtn:hover {
+      background-color: #0b7dda;
+    }
+
+    #revealQuestionBtn {
+      background-color: #ff9800;
+    }
+
+    #revealQuestionBtn:hover {
+      background-color: #e68a00;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+    }
+
+    .coin-result {
+      font-size: clamp(20px, 4vw, 24px);
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .coin-animation {
+      width: 100px;
+      height: 100px;
+      margin: 20px auto;
+      background-color: #ffd700;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: flip 1s ease-in-out;
+    }
+
+    @keyframes flip {
+      0% { transform: rotateY(0deg); }
+      100% { transform: rotateY(1080deg); }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 15px;
+      }
+
+      .question-box {
+        padding: 15px;
+        margin: 15px 0;
+      }
+
+      .coin-animation {
+        width: 80px;
+        height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎉 Mystery Question Game</h1>
+
+    <div class="question-box" id="questionDisplay">
+      Question hidden until revealed
+    </div>
+
+    <div class="button-group">
+      <button id="flipCoinBtn">Flip Coin</button>
+      <button id="nextRoundBtn" class="hidden">Next Round</button>
+      <button id="revealQuestionBtn" class="hidden">Reveal Question</button>
+    </div>
+
+    <div id="coinResult" class="hidden">
+      <div id="coinAnimation" class="coin-animation">
+        <span id="coinText">🪙</span>
+      </div>
+      <div class="coin-result" id="coinResultText"></div>
+    </div>
+
+    <div id="questionReveal" class="hidden">
+      <p>❓ The question was: <span id="revealedQuestion"></span></p>
+    </div>
+  </div>
+
+  <script>
+    // Array of questions
+    const questions = [
+      "Who is the tallest in this group?",
+      "Who is the most likely to become famous?",
+      "Who would survive the longest in a zombie apocalypse?",
+      "Who is most likely to sleep through their alarm?",
+      "Who is the best dancer in the group?",
+      "Who would win in a karaoke contest?",
+      "Who is most likely to become a millionaire?",
+      "Who is the most adventurous person here?",
+      "Who is most likely to appear on a reality TV show?",
+      "Who tells the best jokes?"
+    ];
+
+    // DOM elements
+    const questionDisplay = document.getElementById('questionDisplay');
+    const flipCoinBtn = document.getElementById('flipCoinBtn');
+    const nextRoundBtn = document.getElementById('nextRoundBtn');
+    const revealQuestionBtn = document.getElementById('revealQuestionBtn');
+    const coinResult = document.getElementById('coinResult');
+    const coinResultText = document.getElementById('coinResultText');
+    const questionReveal = document.getElementById('questionReveal');
+    const revealedQuestion = document.getElementById('revealedQuestion');
+    const coinAnimation = document.getElementById('coinAnimation');
+
+    // Game state
+    let currentQuestion = '';
+    let coinFlipResult = '';
+    let usedQuestions = new Set();
+
+    // Get a random question that hasn't been used recently
+    function getRandomQuestion() {
+      // Reset used questions if we've used most of them
+      if (usedQuestions.size >= questions.length - 3) {
+        usedQuestions.clear();
+      }
+
+      // Get a question we haven't used recently
+      let availableQuestions = questions.filter(q => !usedQuestions.has(q));
+      if (availableQuestions.length === 0) {
+        // Fallback if something goes wrong
+        availableQuestions = questions;
+      }
+
+      const question = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+      usedQuestions.add(question);
+      return question;
+    }
+
+    // Initialize game
+    function initGame() {
+      // Pick a random question but don't display it
+      currentQuestion = getRandomQuestion();
+      questionDisplay.textContent = "Question hidden until revealed";
+
+      // Reset UI
+      flipCoinBtn.classList.remove('hidden');
+      nextRoundBtn.classList.add('hidden');
+      revealQuestionBtn.classList.add('hidden');
+      coinResult.classList.add('hidden');
+      questionReveal.classList.add('hidden');
+    }
+
+    // Flip coin function
+    function flipCoin() {
+      // Disable flip button
+      flipCoinBtn.disabled = true;
+
+      // Show coin animation
+      coinResult.classList.remove('hidden');
+      coinAnimation.style.display = 'flex';
+
+      // After animation delay, show result
+      setTimeout(() => {
+        // Determine result
+        coinFlipResult = Math.random() < 0.5 ? 'heads' : 'tails';
+
+        // Display result
+        coinResultText.textContent = `🪙 Coin landed on: ${coinFlipResult.toUpperCase()}`;
+
+        // Show appropriate buttons based on result
+        flipCoinBtn.classList.add('hidden');
+        nextRoundBtn.classList.remove('hidden');
+
+        if (coinFlipResult === 'tails') {
+          questionReveal.classList.remove('hidden');
+          revealedQuestion.textContent = currentQuestion;
+          questionDisplay.textContent = currentQuestion;
+        } else {
+          revealQuestionBtn.classList.remove('hidden');
+        }
+
+        // Hide animation after showing result
+        coinAnimation.style.display = 'none';
+
+        // Re-enable flip button for next round
+        flipCoinBtn.disabled = false;
+      }, 1000);
+    }
+
+    // Reveal question function (only used when coin is heads)
+    function revealQuestion() {
+      questionReveal.classList.remove('hidden');
+      revealedQuestion.textContent = currentQuestion;
+      revealQuestionBtn.classList.add('hidden');
+      questionDisplay.textContent = currentQuestion;
+    }
+
+    // Set up event listeners
+    flipCoinBtn.addEventListener('click', flipCoin);
+    nextRoundBtn.addEventListener('click', initGame);
+    revealQuestionBtn.addEventListener('click', revealQuestion);
+
+    // Start the game
+    initGame();
+  </script>
+</body>
+</html>
