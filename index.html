@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secret Question Memory Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f9fafb;
+      padding: 24px 16px;
+      max-width: 480px;
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      min-height: 70vh;
+    }
+
+    .game-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .game-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      flex-grow: 1;
+      justify-content: center;
+    }
+
+    .instructions {
+      text-align: center;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      padding: 0 8px;
+    }
+
+    .question-box {
+      background-color: white;
+      padding: 16px;
+      border: 2px solid #93c5fd;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .question-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .question-text {
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .coin-result {
+      padding: 20px;
+      border-radius: 9999px;
+      margin-bottom: 16px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .coin-heads {
+      background-color: #dcfce7;
+      border: 2px solid #22c55e;
+    }
+
+    .coin-tails {
+      background-color: #fee2e2;
+      border: 2px solid #ef4444;
+    }
+
+    .result-box {
+      background-color: white;
+      padding: 16px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .result-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .result-text {
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .revealed-question {
+      text-align: center;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      width: 100%;
+      max-width: 320px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      border: none;
+      color: white;
+      transition: background-color 0.2s;
+    }
+
+    .button:focus {
+      outline: none;
+    }
+
+    .button-reveal {
+      background-color: #3b82f6;
+    }
+
+    .button-reveal:hover, .button-reveal:focus {
+      background-color: #2563eb;
+    }
+
+    .button-reveal:active {
+      background-color: #1d4ed8;
+    }
+
+    .button-flip {
+      background-color: #f59e0b;
+    }
+
+    .button-flip:hover, .button-flip:focus {
+      background-color: #d97706;
+    }
+
+    .button-flip:active {
+      background-color: #b45309;
+    }
+
+    .button-next {
+      background-color: #8b5cf6;
+    }
+
+    .button-next:hover, .button-next:focus {
+      background-color: #7c3aed;
+    }
+
+    .button-next:active {
+      background-color: #6d28d9;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Icon styles */
+    .icon {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (min-width: 640px) {
+      .game-container {
+        padding: 32px 24px;
+      }
+
+      .game-title {
+        font-size: 1.75rem;
+      }
+
+      .instructions {
+        font-size: 1rem;
+      }
+
+      .question-title {
+        font-size: 1.25rem;
+      }
+
+      .question-text {
+        font-size: 1.125rem;
+      }
+
+      .result-title {
+        font-size: 1.25rem;
+      }
+
+      .result-text {
+        font-size: 1.125rem;
+      }
+
+      .coin-result {
+        padding: 24px;
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1 class="game-title">Secret Question Memory Game</h1>
+
+    <!-- Initial State -->
+    <div id="initial-section" class="game-section">
+      <p class="instructions">
+        Press the button to reveal a question. Answer it by naming someone in your group, then flip the coin.
+        If it's tails, you must reveal what the question was. If it's heads, keep it secret!
+      </p>
+      <button id="reveal-button" class="button button-reveal">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        Reveal Question
+      </button>
+    </div>
+
+    <!-- Question Revealed State -->
+    <div id="question-section" class="game-section hidden">
+      <div class="question-box">
+        <h2 class="question-title">Question:</h2>
+        <p id="question-text" class="question-text"></p>
+      </div>
+      <p class="instructions">
+        Now name someone as your answer, then flip the coin!
+      </p>
+      <button id="flip-button" class="button button-flip">
+        <svg class="icon" viewBox="0 0 24 24">
+          <circle cx="8" cy="8" r="7"></circle>
+          <path d="M8 1v14"></path>
+          <path d="M8 8h7"></path>
+          <circle cx="16" cy="16" r="7"></circle>
+          <path d="M16 9v14"></path>
+          <path d="M16 16h7"></path>
+        </svg>
+        Flip Coin
+      </button>
+    </div>
+
+    <!-- Coin Flipped State -->
+    <div id="result-section" class="game-section hidden">
+      <div id="coin-result" class="coin-result">
+        <!-- Will be filled dynamically -->
+      </div>
+
+      <div class="result-box">
+        <h2 class="result-title">Result:</h2>
+        <p id="result-text" class="result-text">
+          <!-- Will be filled dynamically -->
+        </p>
+        <p id="revealed-question" class="revealed-question hidden">
+          <!-- Will be filled dynamically if tails -->
+        </p>
+      </div>
+
+      <button id="next-button" class="button button-next">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
+        </svg>
+        Next Round
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // List of fun questions for the game
+    const questions = [
+      "Who is the tallest person in this group?",
+      "Who is most likely to sleep through their alarm?",
+      "Who would survive the longest in the wilderness?",
+      "Who is most likely to become famous?",
+      "Who is the best dancer in the group?",
+      "Who is most likely to win a reality TV show?",
+      "Who is most likely to become a CEO?",
+      "Who has the best style in this group?",
+      "Who is most likely to adopt a pet on impulse?",
+      "Who would win in a karaoke contest?",
+      "Who is most likely to travel the world?",
+      "Who is most likely to become a millionaire?",
+      "Who would make the best superhero?",
+      "Who is most likely to start their own business?",
+      "Who would win in a cooking contest?"
+    ];
+
+    // DOM Elements
+    const initialSection = document.getElementById('initial-section');
+    const questionSection = document.getElementById('question-section');
+    const resultSection = document.getElementById('result-section');
+
+    const revealButton = document.getElementById('reveal-button');
+    const flipButton = document.getElementById('flip-button');
+    const nextButton = document.getElementById('next-button');
+
+    const questionText = document.getElementById('question-text');
+    const coinResult = document.getElementById('coin-result');
+    const resultText = document.getElementById('result-text');
+    const revealedQuestion = document.getElementById('revealed-question');
+
+    // Game state
+    let currentQuestion = '';
+
+    // Event listeners
+    revealButton.addEventListener('click', revealQuestion);
+    flipButton.addEventListener('click', flipCoin);
+    nextButton.addEventListener('click', nextRound);
+
+    function revealQuestion() {
+      // Pick a random question from the list
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      currentQuestion = questions[randomIndex];
+      questionText.textContent = currentQuestion;
+
+      // Update UI
+      initialSection.classList.add('hidden');
+      questionSection.classList.remove('hidden');
+      resultSection.classList.add('hidden');
+    }
+
+    function flipCoin() {
+      // 50/50 chance for heads or tails
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+
+      // Update UI
+      initialSection.classList.add('hidden');
+      questionSection.classList.add('hidden');
+      resultSection.classList.remove('hidden');
+
+      // Display coin result
+      coinResult.textContent = result.toUpperCase();
+      coinResult.className = 'coin-result';
+      coinResult.classList.add(result === 'heads' ? 'coin-heads' : 'coin-tails');
+
+      // Display result text
+      if (result === 'heads') {
+        resultText.textContent = 'Keep the question secret! 🤫';
+        revealedQuestion.classList.add('hidden');
+      } else {
+        resultText.textContent = 'You must reveal the question! 📢';
+        revealedQuestion.textContent = currentQuestion;
+        revealedQuestion.classList.remove('hidden');
+      }
+    }
+
+    function nextRound() {
+      // Reset to initial state
+      initialSection.classList.remove('hidden');
+      questionSection.classList.add('hidden');
+      resultSection.classList.add('hidden');
+      currentQuestion = '';
+    }
+  </script>
+</body>
+</html>
